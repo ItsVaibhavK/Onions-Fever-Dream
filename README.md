@@ -3,7 +3,7 @@
 #### [2. The current version of Onion's Fever Dream created using Lua and LÖVE2D](https://youtu.be/98ArOOz-dU8)
 #### [3. Demo showcasing the original Scratch version and the current version of Onion's Fever Dream](https://youtu.be/H7JrDLxPTVw)
 
-*Note: The current version of the game is 1.*
+*Note: The current version of the game is 2.*
 
 ## IMPORTANT NOTE REGARDING SOUNDTRACK
 I used [Death Grips'](https://thirdworlds.net/) song, [Get Got](https://www.youtube.com/watch?v=HIrKSqb4H4A), or rather, an instrumental version of the same that I found on [YouTube](https://www.youtube.com/watch?v=53TiNT9sSdI). I cut the part I wanted to keep looped.<br>I do not have any rights to this music, I just really loved how it sounded with the game, and of course, I love Death Grips. I do not intend to have<br>any commercial usage out of this game, it was only meant to be a game that I developed at home as an experiment and a way for me to better understand<br>the concepts that I am learning currently in [CS50's Introduction to Game Development](https://pll.harvard.edu/course/cs50s-introduction-game-development).
@@ -27,9 +27,12 @@ Now, at Week 1 of [CS50's Introduction to Game Development](https://pll.harvard.
 
 ### CONTROLS
 The player controls Onion (the cat) using:
-1. Arrow keys to move in the corresponding direction
-2. W-A-S-D keys mapped to move the player Up-Left-Down-Right
-The player can also move diagonally by pressing two keys at a time.
+1. Arrow keys to move in the corresponding direction.
+2. W-A-S-D keys mapped to move the player Up-Left-Down-Right.
+
+The player can also move diagonally by pressing two keys at a time.<br>Additionally, the player can:
+1. Pause/resume the game at any point by pressing 'P.'
+2. Exit the game at any point by pressing 'ESC'.
 
 ### OBJECTIVE
 The player has to survive for as long as possible by avoiding making contact with the "ghosts" that are chasing them through their fever dream.
@@ -38,7 +41,6 @@ The player has to survive for as long as possible by avoiding making contact wit
 The player earns 1 point for every 3 seconds that they survive. Points are only calculated once the "ghosts" start appearing on-screen.
 
 # THE CODE
-
 I've used a few libraries to help build this game:
 1. `push.lua` - library that allows us to draw the game at a virtual resolution, instead of however large our window is; used to provide a more retro aesthetic
 2. `class.lua` - library that allows us to represent anything in our game as code, rather than keeping track of many disparate variables and methods
@@ -53,7 +55,6 @@ Then comes the `StateMachine` class, and the various states in the game:
 6. `TitleScreenState.lua` - the starting screen of the game, shown on startup
 
 ### CONTROLLING ONION (THE CAT)/PLAYER
-
 I split movement key checks into separate conditionals. This allows for diagonal movement if the player presses 2 keys. <br>For example: 'up' and 'right' will move the player in the corresponding diagonal trajectory.
 This can be seen in `Cat.lua`:
 ```
@@ -76,7 +77,6 @@ end
 ```
 
 ### COLLISION DETECTION
-
 Collisions are detected using AABB collision, and the bounding boxes are also shrunk to give the player a little more leeway in the game.<br>The code for this can also be seen in `Cat.lua`:
 ```
 if self.x > ghost.x + ghost.width*0.01 or ghost.x > self.x + self.width*0.1 then
@@ -90,7 +90,6 @@ return true
 ```
 
 ### GHOST MECHANISM
-
 *IMPORTANT*<br>Since we only want the image loaded once, not per instantation, we define it externally in `Ghost.lua` as `local GHOST_IMAGE = love.graphics.newImage('ghost.png')`.
 
 Ghosts always appear from the left-hand side of the screen, as it better suits the illusion that they are chasing the player.<br>Ghosts are also given a random velocity for each ghost when they spawn. This behavior is defined as follows in `Ghost.lua`:
@@ -179,6 +178,52 @@ function PlayState:exit()
     scrolling = false
 end
 ```
+
+# UPDATES - VERSION 2
+### PAUSE
+I've added pause functionality for the game such that the player can pause the game at any point in the play state by pressing '**p**' on their keyboard.<br>I've used a few variables to achieve this:
+1. In `main.lua` is the global variable `scrolling = true` which helps determine if the background should be scrolling or not depending on the game state that the player is in.
+2. In `PlayState.lua`, I've declared a local variable `local paused = false` to keep a track of if the game is in a paused state or not.
+
+In `PlayState.lua`, I've moved all the update execution inside the following conditional: `if scrolling then`. This means that all motion,<br>whether it is of the background, or sprites, will only happen if scrolling is set to true.
+
+I've then implemented the pause feature as seen here:
+```
+if love.keyboard.wasPressed('p') and paused == false then
+    scrolling = false
+    paused = true
+    love.audio.pause(sounds['music'])
+    love.audio.play(sounds['pause'])
+elseif love.keyboard.wasPressed('p') and paused == true then
+    scrolling = true
+    paused = false
+    love.audio.play(sounds['music'])
+end
+```
+If the game is paused, the soundtrack is also paused and a short sound effect to indicate the game being paused is also heard.
+
+Further, if the game is paused, there is a new UI message displayed onscreen:
+```
+if paused == true then
+    love.graphics.setFont(bunnyFont)
+    love.graphics.printf('Paused', 0, 130, VIRTUAL_WIDTH, 'center')
+end
+```
+### CONTROLS DISPLAYED ON TITLESCREEN
+This is a cosmetic update, I've added a helpful list of controls for the player to see at the title screen itself. This can be seen in `TitleScreen.lua`:
+```
+love.graphics.setFont(mediumFont)
+love.graphics.printf('CONTROLS', 0, 150, VIRTUAL_WIDTH, 'center')
+love.graphics.setFont(smallFont)
+love.graphics.printf('w or up arrow - move up', 0, 170, VIRTUAL_WIDTH, 'center')
+love.graphics.printf('a or left arrow - move left', 0, 180, VIRTUAL_WIDTH, 'center')
+love.graphics.printf('s or down arrow - move down', 0, 190, VIRTUAL_WIDTH, 'center')
+love.graphics.printf('d or right arrow - move right', 0, 200, VIRTUAL_WIDTH, 'center')
+love.graphics.printf('p - pause/resume', 0, 210, VIRTUAL_WIDTH, 'center')
+love.graphics.printf('escape - quit', 0, 220, VIRTUAL_WIDTH, 'center')
+```
+### MINOR UPDATES
+I've also updated the messages that are displayed onscreen (when a player collides with a ghost) in `ScoreState.lua`.
 
 # FUTURE IDEAS
 1. Give the option to the player to choose levels, change the number of ghosts that can be spawned according to difficulty,<br>and perhaps change the background and soundtrack, too.
