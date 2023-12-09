@@ -93,7 +93,8 @@ function love.load()
     ]]
     sounds = {
         ['hurt'] = love.audio.newSource('hurt.wav', 'static'),
-        ['music'] = love.audio.newSource('music.mp3', 'static')
+        ['music'] = love.audio.newSource('music.mp3', 'static'),
+        ['pause'] = love.audio.newSource('pause.wav', 'static')
     }
 
     -- kick off music
